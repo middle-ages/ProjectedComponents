@@ -8,11 +8,9 @@ import 'src/style/reset.css';
 withFontManager(
   fontManager =>
     void ReactDOM.render(
-      <React.StrictMode>
-        <FontContext.Provider value={fontManager}>
-          <App />
-        </FontContext.Provider>
-      </React.StrictMode>,
+      <FontContext.Provider value={fontManager}>
+        <App />
+      </FontContext.Provider>,
       document.getElementById('root'),
     ),
 );
