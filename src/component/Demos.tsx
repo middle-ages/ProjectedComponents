@@ -65,19 +65,23 @@ export const demos = [
     component: <LabeledTextBox {...labeledText} opacity={0.4} zLevel={1} />,
   },
   {
-    name: 'Levels all the way down',
+    name: 'Is 6 levels enough?',
     component: (
-      <LabeledBox text="Level 0" zLevel={1}>
+      <LabeledBox text="Level 1" zLevel={1}>
         <VFlex>
-          <LabeledBox text="Level 1" zLevel={1}>
+          <LabeledBox text="Level 2" zLevel={1} opacity={0.7}>
             <VFlex>
-              <LabeledBox text="Level 2" zLevel={1}>
+              <LabeledBox text="Level 3" zLevel={1} opacity={0.6}>
                 <VFlex>
-                  <LabeledBox text="Level 3" zLevel={1}>
+                  <LabeledBox text="Level 4" zLevel={1} opacity={0.5}>
                     <VFlex>
-                      <LabeledBox text="Level 4" zLevel={1}>
+                      <LabeledBox text="Level 5" zLevel={1} opacity={0.4}>
                         <VFlex>
-                          <LabeledTextBox zLevel={1} {...labeledText} />
+                          <LabeledTextBox
+                            zLevel={1}
+                            {...labeledText}
+                            opacity={0.3}
+                          />
                         </VFlex>
                       </LabeledBox>
                     </VFlex>

@@ -87,8 +87,9 @@ export const faceStyle = ({ face, ...args }: BoxFace & { face: Face }) => {
     } = mergeDefaultBoxFace(args),
     styles = [
       allBordersCss({ borderWidth, ...borderDef }),
-      defined(opacity) && { opacity },
-      ...(face !== 'front' ? [layout(depth, borderWidth)(face)] : []),
+      ...(face !== 'front'
+        ? [layout(depth, borderWidth)(face), defined(opacity) && { opacity }]
+        : []),
     ];
 
   return style(boxThemeStyle(boxThemeKey, face), ...styles);
