@@ -20,9 +20,10 @@ export const App = () => (
       <Viewport
         orbit="y"
         strokeWidth={1}
+        periodSec={60}
+        isOrbiting
         {...{ scale }}
         {...{ styles }}
-        isOrbiting
       >
         <HFlex wrap styles={[css.stretch]}>
           {demos.map(({ name, component }, idx) => (
