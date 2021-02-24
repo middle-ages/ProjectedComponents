@@ -1,10 +1,12 @@
 import { FC, ReactElement } from 'react';
 import reactElementToJSXString from 'react-element-to-jsx-string';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { ghcolors as colors } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { HFlex, Labeled } from 'src/component/TwoD';
 import { Styled } from 'src/component/types';
-import { backgroundColor, css } from 'src/css';
+import { backgroundColor, css, defaultCss } from 'src/css';
+import { style } from 'typestyle';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { ghcolors as colors } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { scale } from 'csx';
 
 const decode = reactElementToJSXString;
 
