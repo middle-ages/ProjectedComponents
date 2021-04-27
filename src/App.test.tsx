@@ -17,5 +17,5 @@ test('Text shown', () => {
     </FontContext.Provider>,
   );
 
-  expect(screen.getAllByText(/HELLO/).length).toBeGreaterThan(0);
+  expect(screen.getAllByText(/Set/).length).toBeGreaterThan(0);
 });

@@ -1,91 +1,47 @@
+import { flow } from 'fp-ts/lib/function';
 import * as RE from 'fp-ts/ReadonlyRecord';
-import {
-  BorderEdges,
-  HorizontalPadEdges,
-  PadDirMultiplier,
-  VerticalPadEdges,
-} from 'src/css/border/constants';
-import {
-  BorderDef,
-  BorderDefKey,
-  BorderEdge,
-  EdgeDef,
-  EdgeDefKey,
-} from 'src/css/border/types';
+import { BorderEdges } from 'src/css/border/constants';
+import { BorderDef, BorderEdge, EdgeDef } from 'src/css/border/types';
 import { Style } from 'src/css/types';
-import { pxValue, ucFirst } from 'src/css/util';
-import { mergeDefined, split, ToRequired } from 'src/util';
+import { px, ucFirst } from 'src/css/util';
+import { defaultHelpers } from 'src/util';
 
 export * from 'src/css/border/constants';
 export * from 'src/css/border/types';
 
-export const defaultEdgeDef: Required<EdgeDef> = {
+export const [
+    splitEdgeDef,
+    withDefaultEdgeDef,
+    defaultEdgeDef,
+  ] = defaultHelpers<EdgeDef>({
     borderWidth: 1,
     borderStyle: 'solid',
     borderColor: 'black',
-  },
-  defaultBorderDef: Required<BorderDef> = {
-    ...defaultEdgeDef,
-    borderEdges: 'none',
-  };
-
-export const edgeDefKeys = Object.keys(defaultEdgeDef) as EdgeDefKey[],
-  borderDefKeys = Object.keys(defaultBorderDef) as BorderDefKey[];
-
-export const mergeDefaultEdgeDef: ToRequired<EdgeDef> = mergeDefined(
-    defaultEdgeDef,
-  ),
-  mergeDefaultBorderDef: ToRequired<BorderDef> = mergeDefined(defaultBorderDef);
-
-export const splitEdgeDef = split(edgeDefKeys),
-  splitBorderDef = split(borderDefKeys);
+  }),
+  [
+    splitBorderDef,
+    withDefaultBorderDef,
+    defaultBorderDef,
+  ] = defaultHelpers<BorderDef>({ ...defaultEdgeDef, borderEdges: 'none' });
 
 /**
- * True if border definition defines a border to be drawn. A `transparent`
- * border with `borderEdges > 0` and `borderWidth > 0` will return true because
- * this border still takes up layout space.
+ * True if the definition will render a border that will take up layout space.
+ * A `transparent` border with `borderEdges > 0` and `borderWidth > 0` will
+ * return true because this border still takes up layout space.
  **/
 export const hasBorder = (borderDef: BorderDef = {}): boolean =>
   !RE.isEmpty(borderDef) &&
   borderDef.borderEdges !== 'none' &&
   borderDef.borderWidth !== 0;
 
-/**
- * Measure pixels taken up by the horizontal borders. Sum of `left` and `right`
- * border width.
- **/
-export const measureBorderHPad = (borderDef: BorderDef = {}): number => {
-  if (!hasBorder(borderDef)) return 0;
-  const { borderEdges, borderWidth } = mergeDefaultBorderDef(borderDef);
-
-  return borderWidth * PadDirMultiplier[HorizontalPadEdges[borderEdges]];
-};
-
-/**
- * Measure pixels taken up by the vertical borders. Sum of `top` and `bottom`
- * border width.
- **/
-export const measureBorderVPad = (borderDef: BorderDef = {}): number => {
-  if (!hasBorder(borderDef)) return 0;
-  const { borderEdges, borderWidth } = mergeDefaultBorderDef(borderDef);
-
-  return borderWidth * PadDirMultiplier[VerticalPadEdges[borderEdges]];
-};
-
-export const measureBorderPad = (
-  borderDef: BorderDef = {},
-): [number, number] => [
-  measureBorderHPad(borderDef),
-  measureBorderVPad(borderDef),
-];
-
 /** Add border edges to an `EdgeDef` making a `BorderDef` */
 export const addBorderEdges = (edgeDef: EdgeDef) => (
-  borderEdges: BorderEdge = 'all',
-): BorderDef & { borderEdges: BorderEdge } => ({
-  ...edgeDef,
-  borderEdges,
-});
+    borderEdges: BorderEdge = 'all',
+  ): BorderDef & { borderEdges: BorderEdge } => ({
+    ...edgeDef,
+    borderEdges,
+  }),
+  addAllBorderEdges = (edgeDef: EdgeDef) => addBorderEdges(edgeDef)('all');
 
 /**
  * Convert a border definition into a style object.
@@ -102,22 +58,24 @@ export const borderCss = (borderDef: BorderDef = {}): Style => {
     borderStyle,
     borderColor,
     borderEdges,
-  } = mergeDefaultBorderDef(borderDef);
+  } = withDefaultBorderDef(borderDef);
 
   const edgeList: readonly BorderEdge[] = BorderEdges[borderEdges];
 
   return Object.fromEntries(
     edgeList.map(edge => [
       `border${ucFirst(edge)}`,
-      [pxValue(borderWidth), borderStyle, borderColor].join(' '),
+      [px(borderWidth), borderStyle, borderColor].join(' '),
     ]),
   );
 };
 
 /**
+ * Convert an edge definition into a style object. Same edge is rendered for
+ * each of the 4 border sides.
+ *
  * @param edgeDef `borderWidth`, `borderStyle` and
  * `borderColor`
  * @returns Style object
  */
-export const allBordersCss = (edgeDef: EdgeDef = {}): Style =>
-  borderCss({ ...edgeDef, borderEdges: 'all' });
+export const allBordersCss = flow(addAllBorderEdges, borderCss);

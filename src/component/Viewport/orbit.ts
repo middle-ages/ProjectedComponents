@@ -1,8 +1,7 @@
 import { flow, pipe } from 'fp-ts/lib/function';
 import { CameraKey, cameraKeyAngle } from 'src/component/Viewport/camera';
-import { invAngle, rotate } from 'src/css';
-import { Angle3 } from 'src/geometry';
-import { defined } from 'src/util';
+import { rotate } from 'src/css';
+import { Angle3, invDeg } from 'src/geometry';
 import { keyframes } from 'typestyle';
 
 export type Orbit = typeof Orbits[number];
@@ -18,7 +17,8 @@ const invAngle3 = ({ x, y, z }: Angle3) => (orbit: Orbit): Angle3 => {
     key: 'x' | 'y' | 'z',
     value: number | undefined,
   ) => ({
-    [key]: !defined(value) ? 0 : orbit.includes(key) ? invAngle(value) : value,
+    [key]:
+      value === undefined ? 0 : orbit.includes(key) ? invDeg(value) : value,
   });
 
   return {
@@ -34,5 +34,21 @@ const orbitFrames = (from: Angle3) => (orbit: Orbit): string =>
     to: { transform: pipe(orbit, invAngle3(from), rotate) },
   });
 
-/** Generate an animation name from an orbit and a camera angle. */
+/**
+ * Generate an animation name from a camera angle and an orbit
+ *
+ * @param from a name of a camera angle
+ * @returns a function from `Orbit` to the string animation name generated
+ *
+ * Example:
+ * ```
+ * import { animation, orbitAnimation } from 'projected-components';
+ *
+ * const camera    = 'front';                       // front camera angle
+ * const orbit     = 'yz';                          // rotate on YZ axes
+ * const periodSec = 2;                             // 1 turn / 2 seconds
+ * const keyframes = orbitAnimation(camera)(orbit);
+ * const style     = animation(keyframes)(periodSec)
+ * ```
+ */
 export const orbitAnimation: OrbitAnimation = flow(cameraKeyAngle, orbitFrames);

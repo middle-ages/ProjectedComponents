@@ -1,28 +1,28 @@
 import { FC } from 'react';
-import { borderCss, css, defaultCss, hPx } from 'src/css';
+import { borderCss, defaultClass, heightPx } from 'src/css';
 import { useFontBaseline } from 'src/font';
 
-export const className = defaultCss(css.borderBox, css.absolute, css.w100),
+export const className = defaultClass('absolute', 'w100'),
   baselineBorder = {
     borderColor: '#ff0000ff',
     borderStyle: 'dashed',
     borderEdges: 'bottom',
   } as const;
 
-export interface Baseline {
+export interface MetricGuides {
   fontFamily: string;
   fontSize: number;
   fromTypoMetrics?: boolean;
 }
 
-export const Baseline: FC<Baseline> = ({
+export const MetricGuides: FC<MetricGuides> = ({
   fontFamily,
   fontSize,
   fromTypoMetrics = false,
 }) => (
   <div
     className={className(
-      hPx(useFontBaseline(fontFamily, fontSize, fromTypoMetrics)),
+      heightPx(useFontBaseline(fontFamily, fontSize, fromTypoMetrics)),
       borderCss({ ...baselineBorder, borderWidth: fontSize / 16 }),
     )}
   />

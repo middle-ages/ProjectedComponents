@@ -4,7 +4,7 @@ import { splitText, Text } from 'src/component/TwoD/Text';
 
 export type LabeledTextBox = LabeledBox & { labelText?: string };
 
-/** A `LabeledBox` whose child is a `Text` component */
+/** `Text` inside a `LabeledBox` */
 export const LabeledTextBox: FC<LabeledTextBox> = ({
   labelText = 'label',
   children,

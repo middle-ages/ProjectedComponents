@@ -1,14 +1,13 @@
 import { flow, pipe } from 'fp-ts/lib/function';
 import { css, rotate, Style } from 'src/css';
-import { Angle3 } from 'src/geometry';
+import { Angle3, ZeroAngle3 } from 'src/geometry';
 import { mergeDefined } from 'src/util';
 
 interface Camera {
   angle?: Angle3;
 }
 
-export type Cameras = typeof cameras;
-export type CameraKey = keyof Cameras;
+type Cameras = typeof cameras;
 
 const cameras = {
   front: {},
@@ -29,11 +28,11 @@ const cameras = {
   frontBottomRight: { angle: { x: 45, y: -45 } },
 } as const;
 
-export const cameraKeys = Object.keys(cameras) as CameraKey[];
-
 const camera = (key: CameraKey): Camera => cameras[key],
   cameraAngle = (camera?: Camera): Angle3 =>
-    mergeDefined({ x: 0, y: 0, z: 0 })(camera?.angle ?? {});
+    mergeDefined(ZeroAngle3)(camera?.angle ?? {});
+
+export type CameraKey = keyof Cameras;
 
 export const cameraKeyAngle = flow(camera, cameraAngle),
   cameraStyle = (key: CameraKey): Style => ({

@@ -1,8 +1,8 @@
 import { FC } from 'react';
-import { Baseline } from 'src/component/TwoD/Text/Baseline';
+import { MetricGuides } from 'src/component/TwoD/Text/MetricGuides';
 import { PlainText } from 'src/component/TwoD/Text/PlainText';
 import { Style } from 'src/css';
-import { mergeDefaultMeasured } from 'src/font';
+import { mergeDefaultMeasured } from 'src/font/metrics/measured';
 
 export interface MetricText<S extends Style = Style> extends PlainText<S> {
   fromTypoMetrics?: boolean;
@@ -26,7 +26,7 @@ export const MetricText: FC<MetricText> = ({
   const { fontFamily, fontSize } = mergeDefaultMeasured(props);
   return (
     <PlainText {...props}>
-      <Baseline {...{ fromTypoMetrics, fontFamily, fontSize }} />
+      <MetricGuides {...{ fromTypoMetrics, fontFamily, fontSize }} />
       {children}
     </PlainText>
   );

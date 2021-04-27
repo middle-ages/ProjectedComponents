@@ -1,13 +1,14 @@
 import { FC } from 'react';
-import { At } from 'src/component/TwoD/At';
-import { css, OmitPosition } from 'src/css';
+import { Base } from 'src/component/Base';
+import { css, cssOf, OmitPosition } from 'src/css';
+import { mergeStyles } from 'src/css/merge';
 
-export type Panel = At<OmitPosition>;
+export type Panel = Base<OmitPosition>;
 
 const defaultStyle = {
-  ...css.relative,
-  ...css.minContentWidth,
-  // must wrap $nest with `['']` for benefit of eslint
+  ...cssOf('relative', 'minContentWidth'),
+
+  // eslint will not take `$nest` as a key
   ['$nest']: { '&>*': css.absolute },
 };
 
@@ -16,7 +17,7 @@ const defaultStyle = {
  * on children to position them.
  */
 export const Panel: FC<Panel> = ({ children, styles = [], ...props }) => (
-  <At styles={[defaultStyle, ...styles]} {...props}>
+  <div className={mergeStyles(defaultStyle, ...styles)} {...props}>
     {children}
-  </At>
+  </div>
 );

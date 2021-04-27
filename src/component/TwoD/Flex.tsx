@@ -1,73 +1,53 @@
 import { FC } from 'react';
-import { At } from 'src/component/TwoD/At';
-import {
-  css,
-  cssOf,
-  FlexDir,
-  flexGap,
-  maybePxValue,
-  OmitDisplay,
-  Style,
-} from 'src/css';
-import { splitPoint } from 'src/geometry';
+import { Base, baseStyles } from 'src/component/Base';
+import { css, cssOf, FlexDir, Style } from 'src/css';
+import { mergeStyles } from 'src/css/merge';
 
-export type FlexStyle<S extends Style = Style> = OmitDisplay<S>;
+export type FlexStyle<S extends Style = Style> = Omit<S, 'display'>;
 export type NoDirFlexStyle<S extends Style = Style> = Omit<
   FlexStyle<S>,
   'flexDirection'
 >;
 
-export interface Flex<S extends Style = Style> extends At<FlexStyle<S>> {
+export interface Flex<S extends Style = Style> extends Base<FlexStyle<S>> {
+  noGap?: boolean;
   gap?: number | string;
   wrap?: boolean;
   dir?: FlexDir;
 }
 
-export interface NoDirFlex<S extends Style = Style>
-  extends At<NoDirFlexStyle<S>> {
-  gap?: number | string;
-  wrap?: boolean;
-}
-
-//const defaultStyle = css.minContentWidth;
+export type NoDirFlex<S extends Style = Style> = Omit<
+  Flex<NoDirFlexStyle<S>>,
+  'dir'
+>;
 
 /** A horizontal/vertical flex container.
  *
- * Owns the style keys:
- * 1. `transform`
- * 1. `display`
- * 1. `border`
- * 1. `border(top|bottom|left|right)`
- * 1. `border(top|bottom|left|right)(style|width|color)`
- *
- * @param dir - `column` | `row` | `column-reverse` | `row-reverse`. Default is `row`
- * @param gap - flex gap in pixels. Default is zero
+ * @param noGap if true, overrides value in `gap` to set `gap=0`. Default is `false`
+ * @param gap flex gap in CSS length units. Default is `1ex`
+ * @param wrap sets `flex-wrap` if true. Default is `false`
+ * @param dir `column` | `row` | `column-reverse` | `row-reverse`. Default is `row`
  */
 export const Flex: FC<Flex> = ({
-  dir,
+  noGap = false,
   gap = '1ex',
   wrap = false,
+  dir,
   styles = [],
   children,
   ...props
 }) => {
-  const [point, borderDef] = splitPoint(props);
+  const className = mergeStyles(
+    !noGap && { padding: gap, gap },
+    wrap && css.flexWrap,
+    cssOf(dir && dir === 'row' ? 'hFlex' : 'vFlex'),
 
-  return (
-    <At
-      styles={[
-        flexGap(gap),
-        { padding: maybePxValue(gap) },
-        wrap && css.flexWrap,
-        cssOf(dir && dir === 'row' ? 'hFlex' : 'vFlex'),
-        ...styles,
-      ]}
-      {...point}
-      {...borderDef}
-    >
-      {children}
-    </At>
+    ...baseStyles(props),
+
+    ...styles,
   );
+
+  return <div {...{ className }}>{children}</div>;
 };
 
 export const HFlex: FC<NoDirFlex> = ({ children, ...props }) => (

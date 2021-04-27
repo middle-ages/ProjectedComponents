@@ -1,17 +1,19 @@
 import { pipe } from 'fp-ts/lib/function';
 import * as RE from 'fp-ts/ReadonlyArray';
-import { backgroundColor, Color, Style } from 'src/css';
-import { Face, Faces } from 'src/component/ThreeD/Box/types';
+import { bgColor, Color, Style } from 'src/css';
+import { FaceKey, FaceKeys } from 'src/component/ThreeD/Box/types';
 
-export type BoxTheme = Record<Face, Color>;
+export type BoxTheme = Record<FaceKey, Color>;
 export type BoxThemes = typeof BoxThemes;
 export type BoxThemeKey = keyof BoxThemes;
 
 type BoxColors = [Color, Color, Color, Color, Color, Color];
+
+// front, back, left, right, top, bottom
 type FaceNum = 0 | 1 | 2 | 3 | 4 | 5;
 
 const fromTuple = (colors: BoxColors) =>
-    pipe(Faces, RE.zip(colors), Object.fromEntries) as BoxTheme,
+    pipe(FaceKeys, RE.zip(colors), Object.fromEntries) as BoxTheme,
   mapColors = (f: (idx: FaceNum) => Color) =>
     fromTuple(
       pipe(
@@ -27,11 +29,13 @@ const BoxThemes = {
   grayscale: mapColors(i => `hsl(0deg,0%,${idxToPercent(i)}%)`),
   transparent: mapColors(() => 'transparent'),
   white: mapColors(() => 'white'),
-  yellowOrange: mapColors(i => (i === 0 ? '#ffff0088' : '#ffcc0088')),
+  yellowOrange: mapColors(i =>
+    i === 0 ? '#ffff00' : i === 1 ? '#eeff44' : '#ffcc00',
+  ),
 } as const;
 
 export const boxThemes = Object.keys(BoxThemes) as BoxThemeKey[],
-  boxThemeColor = (key: BoxThemeKey) => (face: Face): Color =>
+  boxThemeColor = (key: BoxThemeKey) => (face: FaceKey): Color =>
     BoxThemes[key][face],
-  boxThemeStyle = (key: BoxThemeKey, face: Face): Style =>
-    pipe(face, boxThemeColor(key), backgroundColor);
+  boxThemeStyle = (key: BoxThemeKey, face: FaceKey): Style =>
+    pipe(face, boxThemeColor(key), bgColor);
