@@ -1,4 +1,4 @@
-import * as AR from 'fp-ts/lib/Array';
+import * as AR from 'fp-ts/lib/ReadonlyArray';
 import { pipe } from 'fp-ts/lib/function';
 import { loadFont } from 'src/font/loader/loadRemote';
 import { sheetToFonts } from 'src/font/loader/styleSheet';
@@ -6,7 +6,10 @@ import { FontManager } from 'src/font/manager';
 
 export * from 'src/font/loader/loadLocal';
 
-/** Loads all fonts that appear in stylesheets. */
+/**
+ * Loads async all fonts that appear in stylesheets, returns a promise of a
+ * `FontManager` with all fonts loaded.
+ */
 export const loadStyleSheetFonts = (): Promise<FontManager> => {
   const res = pipe(
     window.document.styleSheets,

@@ -1,59 +1,67 @@
+import { px } from 'csx';
+import { pipe } from 'fp-ts/lib/function';
 import { FC } from 'react';
-import { BorderedAt } from 'src/component/TwoD/At';
+import { BorderBase } from 'src/component/Base';
 import { NoDirFlexStyle, VFlex } from 'src/component/TwoD/Flex';
 import { MetricProps, Text } from 'src/component/TwoD/Text';
 import {
   addBorderEdges,
-  backgroundColor,
+  bgColor,
   Color,
   css,
-  foregroundColor,
+  fgColor,
+  hPadding,
   splitEdgeDef,
   Style,
   topRightBorderRadius,
+  withDefaultEdgeDef,
 } from 'src/css';
 import { fallbackFontSize } from 'src/font';
 import { splitPoint } from 'src/geometry';
+import { pluck } from 'src/util';
 
 export interface LabeledProps {
   labelColor?: Color;
   labelBgColor?: Color;
   labelOpacity?: number;
-  isThreeD?: boolean;
+  labelHPad?: string | 0;
+  innerBorder?: boolean;
 }
-
-export type LabeledKey = keyof LabeledProps;
 
 /**
  * `Labeled` component is bordered on all edges.
  */
 export type Labeled<S extends Style = Style> = LabeledProps &
   MetricProps &
-  BorderedAt<NoDirFlexStyle<S>>;
+  BorderBase<NoDirFlexStyle<S>>;
 
 /**
  * A container that adds a label above its children.
  *
  * Label colors:
- * @param labelColor label text color
- * @param labelBgColor label text background color
- * @param labelOpacity
- * @param isThreeD set to true if children have a Z dimension
+ * @param labelColor label text color. Default is 'black'
+ * @param labelBgColor label text background color. Default is `#fffff0`
+ * @param labelOpacity default is `1`
+ * @param labelHPad override default horizontal text padding of label
+ * @param innerBorder if true, and the label has a border, then a horizontal
+ * line is drawn separating the label and its children. Default is `false`
+ * @param is3D set to true if children have a Z dimension. Default is
+ * `false`
  *
  * Label text props:
  * @param text label text
  * @param fontFamily label font family
  * @param fontSize label font size in pixels, default is `12`
- * @param hPad total horizontal label padding in pixels
  * @param showMetrics
  * @param fromTypoMetrics
  *
  * Border edge props. `borderEdges` is fixed at `all`.
- * @param borderWidth
- * @param borderColor
+ * @param borderWidth set to `0` to remove default borders
+ * @param borderColor set to `transparent` to remove default borders but leave
+ * the space they occupy alone
  * @param borderStyle
  *
- * Point translate props:
+ * Point:
  * @param x
  * @param y
  * @param z
@@ -62,28 +70,32 @@ export const Labeled: FC<Labeled> = ({
   labelColor = 'black',
   labelBgColor = '#fffff0',
   labelOpacity: opacity = 1,
-  isThreeD = false,
+  labelHPad,
+  innerBorder = false,
   children,
   styles = [],
   ...props
 }) => {
   const [edgeDef, noEdge] = splitEdgeDef(props),
     [point, userTextProps] = splitPoint(noEdge),
-    textProps = fallbackFontSize(12)(userTextProps);
+    textProps = fallbackFontSize(12)(userTextProps),
+    borderWidth = pipe(withDefaultEdgeDef(edgeDef), pluck('borderWidth'), px);
 
   const labelStyles = [
-    backgroundColor(labelBgColor),
-    foregroundColor(labelColor),
+    { opacity, top: borderWidth },
+    innerBorder ? {} : { zIndex: 1 },
+    css.relative,
+    bgColor(labelBgColor),
+    fgColor(labelColor),
     topRightBorderRadius((3 / 4) * textProps.fontSize),
-    { opacity },
+    labelHPad != undefined && hPadding(labelHPad),
   ];
 
-  const threeDStyle = isThreeD ? css.preserveThreed : {},
-    borderFor = addBorderEdges(edgeDef);
+  const textBorder = addBorderEdges(edgeDef)('noBottom');
 
   return (
-    <VFlex {...point} styles={[threeDStyle, ...styles]} gap={0}>
-      <Text {...textProps} {...borderFor('noBottom')} styles={labelStyles} />
+    <VFlex {...point} {...{ styles }} noGap is3D>
+      <Text {...textProps} {...textBorder} styles={labelStyles} />
       {children}
     </VFlex>
   );

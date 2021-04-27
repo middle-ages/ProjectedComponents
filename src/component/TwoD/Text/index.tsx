@@ -1,11 +1,12 @@
 import { FC } from 'react';
-import { At } from 'src/component/TwoD/At';
+import { Base } from 'src/component/Base';
 import { MetricText } from 'src/component/TwoD/Text/MetricText';
 import { PlainText, TextStyle } from 'src/component/TwoD/Text/PlainText';
 import { Style } from 'src/css';
-import { Measured, measuredKeys } from 'src/font';
+import { Measured, measuredKeys } from 'src/font/metrics/measured';
 import { split } from 'src/util';
 
+export * from 'src/component/TwoD/Text/MetricGuides';
 export * from 'src/component/TwoD/Text/MetricText';
 export * from 'src/component/TwoD/Text/PlainText';
 
@@ -18,14 +19,13 @@ export interface MetricProps extends Partial<Measured> {
   fromTypoMetrics?: boolean;
 }
 
-export type Text<S extends Style = Style> = At<TextStyle<S>> & MetricProps;
-export type TextKey = keyof MetricProps;
+export type Text<S extends Style = Style> = Base<TextStyle<S>> & MetricProps;
 
-export const textKeys: TextKey[] = [
+export const textKeys = [
     'showMetrics',
     'fromTypoMetrics',
     ...measuredKeys,
-  ],
+  ] as const,
   splitText = split(textKeys);
 
 /**
@@ -42,7 +42,6 @@ export const textKeys: TextKey[] = [
  * @param text
  * @param fontFamily
  * @param fontSize
- * @param hPad
  *
  * Border props:
  * @param borderWidth

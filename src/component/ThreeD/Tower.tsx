@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { BoxFace } from 'src/component/ThreeD/Box/Face';
+import { BorderBox } from 'src/component/ThreeD/Box/BorderBox';
 import { LabeledBox } from 'src/component/ThreeD/LabeledBox';
 import { LabeledTextBox } from 'src/component/ThreeD/LabeledTextBox';
 import { Flex } from 'src/component/TwoD';
@@ -10,7 +10,7 @@ interface Leaf {
 }
 
 export interface Branch {
-  args: BoxFace;
+  args: BorderBox;
   text: string;
   dir: FlexDir;
   nodes: readonly Node[];
@@ -87,7 +87,7 @@ export const leaf: NewLeaf = (() => {
  * 1. `columnBranch` - 3D vertical flex tree branch
  * 1. `vertical` - 2D vertical flex tree branch
  */
-export const rowBranch = (args: Partial<BoxFace>) => (
+export const rowBranch = (args: Partial<BorderBox>) => (
     text: string,
     ...nodes: Node[]
   ): Branch => ({
@@ -96,7 +96,7 @@ export const rowBranch = (args: Partial<BoxFace>) => (
     dir: 'row',
     args,
   }),
-  columnBranch = (args: Partial<BoxFace>) => (
+  columnBranch = (args: Partial<BorderBox>) => (
     text: string,
     ...nodes: Node[]
   ): Branch => ({

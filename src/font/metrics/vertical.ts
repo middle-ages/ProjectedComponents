@@ -23,7 +23,6 @@ const readOs2 = (font: Font): Os2Data => font['OS/2'] as any;
 
 export const computeWinBaseLine = (
   font: Font,
-  fontSize: number,
   lineHeight = DefaultLineHeightEm,
 ): number => {
   const { lineGap, unitsPerEm: uem } = font,
@@ -33,7 +32,6 @@ export const computeWinBaseLine = (
 
 export const computeTypoBaseLine = (
   font: Font,
-  fontSize: number,
   lineHeight = DefaultLineHeightEm,
 ): number => {
   const { unitsPerEm: uem } = font,

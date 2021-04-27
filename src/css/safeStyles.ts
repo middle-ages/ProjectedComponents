@@ -1,6 +1,6 @@
 import { BorderKey } from 'src/css/border';
 import { Style } from 'src/css/types';
-import { BackgroundKey, FontKey, HPaddingKey } from 'src/css/valueTypes';
+import { BackgroundKey, FontKey } from 'src/css/valueTypes';
 
 /**
  * Use as style types for components that use these style keys. The user of the
@@ -16,28 +16,19 @@ import { BackgroundKey, FontKey, HPaddingKey } from 'src/css/valueTypes';
 
 /**
  * The stylesheet `T` without the keys:
- * 1. `transform`
- * 1. `border`
- * 1. `border(top|bottom|left|right)`
- * 1. `border(top|bottom|left|right)(style|width|color)`
+ * 1. `border`, `border-(top|bottom|left|right)`,
+ * `border-(top|bottom|left|right)-(style|width|color)`
+ * 1. `transform-style`
  **/
-export type OmitAt<S extends Style = Style> = OmitTransform<OmitBorder<S>>;
+export type OmitBase<S extends Style = Style> = Omit<
+  S,
+  BorderKey | 'transformStyle'
+>;
 
-export type OmitTransform<S extends Style = Style> = Omit<S, 'transform'>;
-
-export type OmitBorder<S extends Style = Style> = Omit<S, BorderKey>;
+export type OmitPosition<S extends Style = Style> = Omit<S, 'position'>;
 
 export type OmitWidth<S extends Style = Style> = Omit<S, 'width'>;
 
-export type OmitHPad<S extends Style = Style> = Omit<S, HPaddingKey>;
-
 export type OmitBackground<S extends Style = Style> = Omit<S, BackgroundKey>;
 
-export type OmitText<S extends Style = Style> = Omit<
-  OmitWidth<OmitHPad<S>>,
-  FontKey
->;
-
-export type OmitDisplay<S extends Style = Style> = Omit<S, 'display'>;
-
-export type OmitPosition<S extends Style = Style> = Omit<OmitAt<S>, 'position'>;
+export type OmitText<S extends Style = Style> = Omit<OmitWidth<S>, FontKey>;

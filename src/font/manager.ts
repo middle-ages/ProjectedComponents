@@ -1,13 +1,15 @@
 import { Font } from '@pdf-lib/fontkit';
-import { defined } from 'src/util';
+import * as RA from 'fp-ts/Array';
+import { pipe } from 'fp-ts/lib/function';
+import {} from 'fp-ts/lib/Record';
 import {
   computeTypoBaseLine,
   computeWinBaseLine,
-  HMetrics,
-  Measured,
   measureText,
 } from 'src/font/metrics';
+import { HMetrics, Measured } from 'src/font/metrics/measured';
 import { FetchedFont } from 'src/font/types';
+import { pluck } from '../util/Object';
 
 export class FontManager {
   private cache: Map<string, FetchedFont> = new Map();
@@ -19,10 +21,11 @@ export class FontManager {
   }
 
   get = (family: string): Font => {
-    if (!defined(family))
+    if (family === undefined)
       throw new Error('Requested font but family name is undefined.');
+
     const res = this.cache.get(family);
-    if (!defined(res))
+    if (res === undefined)
       throw new Error(
         `No font found for family name “${family}”. ` +
           (this.cache.size
@@ -39,12 +42,16 @@ export class FontManager {
   }
 
   get families(): string[] {
-    return this.fonts.map(f => f.fontFamily);
+    return pipe('fontFamily', pluck, RA.map)(this.fonts);
   }
 
   measure = (measured: Measured): HMetrics =>
-    measureText(this.get(measured.fontFamily))(measured);
+    pipe(measured.fontFamily, this.get, measureText)(measured);
 
+  /**
+   * Distance in pixels from top of text line (1.5em `line-height`) to baseline
+   *
+   */
   computeBaseLine = (
     fontFamily: string,
     fontSize: number,
@@ -53,7 +60,6 @@ export class FontManager {
     const font = this.get(fontFamily),
       baseline = (fromTypoMetrics ? computeTypoBaseLine : computeWinBaseLine)(
         font,
-        fontSize,
       );
 
     return (fontSize / font.unitsPerEm) * baseline;

@@ -1,6 +1,8 @@
+import { pipe } from 'fp-ts/lib/function';
 import { FC } from 'react';
-import { At } from 'src/component/TwoD/At';
-import { OmitText, splitBorderDef, Style } from 'src/css';
+import { Base, baseStyles } from 'src/component/Base';
+import { cssOf, hPadding, OmitText, px, Style } from 'src/css';
+import { mergeStyles } from 'src/css/merge';
 import {
   Measured,
   mergeDefaultMeasured,
@@ -11,7 +13,11 @@ import {
 export type TextStyle<S extends Style = Style> = OmitText<S>;
 
 export type PlainText<S extends Style = Style> = Partial<Measured> &
-  At<TextStyle<S>>;
+  Base<TextStyle<S>>;
+
+// Explicitly override box-sizing in order to avoid having to measure border
+// width when measuring text
+const defaultStyle = cssOf('contentBox');
 
 /**
  * A text div with tighter horizontal padding.
@@ -28,52 +34,55 @@ export type PlainText<S extends Style = Style> = Partial<Measured> &
  * size. Uses the font metrics to compute the `advance` of the head/last glyphs,
  * then clips and shifts the text accordingly.
  *
- * Owns the style keys:
+ * Adds ownership of the style keys:
  * 1. `width`
+ * 1. `height`
  * 1. `fontFamily`
  * 1. `fontSize`
  * 1. `textIndent`
  * 1. `lineHeight
- * 1. `padding`
- * 1. `paddingLeft`
- * 1. `paddingRight`
- * 1. `transform`
- * 1. `border`
- * 1. `border(top|bottom|left|right)`
- * 1. `border(top|bottom|left|right)(style|width|color)`
  *
  * Text:
  * @param fontFamily must be loaded by the font manager
  * @param fontSize in pixels
  * @param text
- * @param hPad ½ of total horizontal padding in pixels
  *
- * Border props:
+ * Border:
  * @param borderWidth
  * @param borderColor
  * @param borderStyle
  * @param borderEdges set to any value other than `none` to show a border on
  * the specified edges. Default is show no border
  *
- * Point translate props:
+ * Position:
  * @param x
  * @param y
  * @param z
+ *
+ * 3D:
+ * @param is3D
  */
 export const PlainText: FC<PlainText> = ({
   children,
   styles = [],
   ...props
 }) => {
-  const [measured, rest] = splitMeasured(props),
-    [borderDef, point] = splitBorderDef(rest),
+  const [measured, base] = splitMeasured(props),
     textDef = mergeDefaultMeasured(measured),
-    textStyle = useTextBoxMetrics(textDef);
+    { text, fontSize } = textDef;
+
+  const className = mergeStyles(
+    ...baseStyles(base),
+    defaultStyle,
+    useTextBoxMetrics(textDef),
+    pipe(fontSize / 2, px, hPadding),
+    ...styles,
+  );
 
   return (
-    <At styles={[textStyle, ...styles]} {...borderDef} {...point} {...rest}>
-      {textDef.text}
+    <div {...{ className }}>
+      {text}
       {children}
-    </At>
+    </div>
   );
 };

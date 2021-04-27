@@ -1,1 +1,1 @@
-export const square = <T>(x: T): readonly [T, T] => [x, x] as const;
+export const square = <T>(x: T): [T, T] => [x, x];

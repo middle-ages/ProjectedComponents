@@ -1,85 +1,72 @@
+import { multiply } from 'fp-ts-std/Number';
+import { flow, pipe } from 'fp-ts/function';
+import * as RA from 'fp-ts/ReadonlyArray';
+import { singleton } from 'fp-ts/Record';
 import { css } from 'src/css/lib';
-import { Style } from 'src/css/types';
-import { emValue, maybePxValue, pxRecord, pxValue } from 'src/css/util';
-import { Color } from 'src/css/valueTypes';
+import { Style, StyleKey } from 'src/css/types';
+import { emRecord, pxRecord } from 'src/css/util';
+import { Color, Gap } from 'src/css/valueTypes';
 import { Angle3, Point, ThreeDAxis } from 'src/geometry';
-import { defined, EmptyRecord } from 'src/util';
+import { px } from './util';
 
-export const add100px = (d: number) => `calc(100% + ${pxValue(d)})`;
+const unaryStyle = <V>() => <K extends StyleKey>(k: K) => (v: V): Style =>
+    singleton(k, v),
+  pxStyle = <K extends StyleKey>(k: K) => flow(px, unaryStyle<string>()(k));
 
-export const translate = ({ x, y, z }: Point): string =>
-    [
-      ['X', x],
-      ['Y', y],
-      ['Z', z],
-    ]
-      .map(([k, v]) => (defined(v) ? `translate${k}(${maybePxValue(v)})` : ''))
+export const translate = (point: Point): string =>
+    Object.entries(point)
+      .map(([k, v]) => (v !== undefined ? `translate${k}(${v})` : ''))
       .join(' '),
-  rotate = ({ x, y, z }: Angle3): string =>
-    [
-      ['X', x],
-      ['Y', y],
-      ['Z', z],
-    ]
-      .map(([k, v]) => (defined(v) ? `rotate${k}(${v ?? 0}deg)` : ''))
-      .join(' '),
-  rotateX = (angle: number) => rotate({ x: angle }),
+  rotate = (angle: Angle3): string =>
+    Object.entries(angle)
+      .map(([k, v]) => (v !== undefined ? `rotate${k}(${v}deg)` : ''))
+      .join(' ');
+
+export const rotateX = (angle: number) => rotate({ x: angle }),
   rotateY = (angle: number) => rotate({ y: angle }),
   rotateZ = (angle: number) => rotate({ z: angle }),
   rotateBy = (axis: ThreeDAxis) => (angle: number) => rotate({ [axis]: angle }),
-  invAngle = (deg: number): number =>
-    deg % 360 === 0 ? Math.abs(360 - deg) : (deg - Math.sign(deg) * 360) % 360,
-  translateLeft = (shift: number) => ({ x: pxValue(-1 * shift) } as const),
-  translateRight = (shift: number) => ({ x: pxValue(shift) } as const);
+  scaleBy = (s: number) => `scale(${s})`;
 
-export const flexGap = (
-    gap: number | string | undefined,
-  ): EmptyRecord | { gap: string & {} } =>
-    defined(gap)
-      ? {
-          gap: `${maybePxValue(gap)}`,
-        }
-      : {},
-  hFlexGapPx = (gap: number | string | undefined): Style => ({
-    ...flexGap(gap),
-    ...css.hFlex,
-  }),
-  vFlexGapPx = (gap: number | string | undefined): Style => ({
-    ...flexGap(gap),
-    ...css.vFlex,
-  }),
-  hPadding = (pad: number | string) =>
-    ({
-      paddingLeft: maybePxValue(pad),
-      paddingRight: maybePxValue(pad),
-    } as const),
-  marginPx = (margin: number): Style => ({ margin: pxValue(margin) }),
-  paddingPx = (pad: number): Style => ({ padding: pxValue(pad) });
+export const transform = (...parts: string[]): { transform: string } => ({
+  transform: parts.join(' '),
+});
 
-export const wPx = (width: number): Style => pxRecord({ width }),
-  hPx = (height: number): Style => pxRecord({ height }),
-  whPx = (width: number, height: number): Style =>
-    pxRecord({
-      width,
-      height,
-    });
+export const hFlexGapPx = (gap: Gap): Style => ({ gap, ...css.hFlex }),
+  vFlexGapPx = (gap: Gap): Style => ({ gap, ...css.vFlex });
 
-export const backgroundColor = (color: Color): Style => ({ background: color }),
-  foregroundColor = (color: Color): Style => ({ color: color }),
-  emLineHeight = (h: number) =>
-    ({
-      lineHeight: emValue(h),
-      height: emValue(h),
-    } as const),
-  topLeftBorderRadius = (width: number): Style => ({
-    borderTopLeftRadius: pxValue(width),
-  }),
-  topRightBorderRadius = (width: number): Style => ({
-    borderTopRightRadius: pxValue(width),
-  }),
-  animation = (animationName: string) => (periodSec: number): Style => ({
-    animationName,
-    animationDuration: `${periodSec}s`,
-    animationIterationCount: 'infinite',
-    animationTimingFunction: 'linear',
-  });
+export const hPadding = (pad: string | 0) =>
+    ({ paddingLeft: pad, paddingRight: pad } as const),
+  margin = unaryStyle<string | 0>()('margin'),
+  padding = unaryStyle<string | 0>()('padding');
+
+export const sizePx = (width: number, height: number): Style =>
+  pxRecord({ width, height });
+
+export const [widthPx, heightPx] = pipe(
+  ['width', 'height'] as const,
+  RA.map(pxStyle),
+);
+
+export const [topLeftBorderRadius, topRightBorderRadius] = [
+  pxStyle('borderTopLeftRadius'),
+  pxStyle('borderTopRightRadius'),
+];
+
+export const bgColor = unaryStyle<Color>()('backgroundColor'),
+  fgColor = unaryStyle<Color>()('color'),
+  emLineHeight = (h: number) => emRecord({ lineHeight: h, height: h });
+
+export const fontSizePx = pxStyle('fontSize');
+
+export const animation = (animationName: string) => (
+  periodSec: number,
+): Style => ({
+  animationName,
+  animationDuration: `${periodSec}s`,
+  animationIterationCount: 'infinite',
+  animationTimingFunction: 'linear',
+});
+
+export const add100px = (d: number) => `calc(100% + ${px(d)})`;
+export const sub100px = flow(multiply(-1), add100px);

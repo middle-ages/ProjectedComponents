@@ -1,36 +1,30 @@
-import { viewHeight, viewWidth } from 'csx';
-import { pipe } from 'fp-ts/lib/function';
-import * as RA from 'fp-ts/ReadonlyArray';
+import { FC } from 'react';
 import { demos } from 'src/component/Demos';
 import { ComponentSource } from 'src/component/Source';
-import { Stage } from 'src/component/Stage';
 import { HFlex } from 'src/component/TwoD';
 import { Viewport } from 'src/component/Viewport';
-import { css, translate } from 'src/css';
-import { style } from 'typestyle';
+import { css } from 'src/css';
 
-const scale = 1,
-  [x, y] = pipe([viewWidth, viewHeight], RA.ap([100 * ((scale - 1) / 2)])),
-  styles = [{ transform: translate({ x, y }), padding: viewWidth(10) }],
-  rootClassName = style(css.wh100, css.autoOverflow);
-
-export const App = () => (
-  <Stage>
-    <div className={rootClassName}>
-      <Viewport
-        orbit="y"
-        strokeWidth={1}
-        periodSec={60}
-        isOrbiting
-        {...{ scale }}
-        {...{ styles }}
-      >
-        <HFlex wrap styles={[css.stretch]}>
-          {demos.map(({ name, component }, idx) => (
-            <ComponentSource key={idx} {...{ idx, name, component }} />
-          ))}
-        </HFlex>
-      </Viewport>
-    </div>
-  </Stage>
+export const App: FC = () => (
+  <div style={(css.autoOverflow, css.wh100)}>
+    <Viewport
+      scale={1}
+      camera="iso"
+      orbit="y"
+      strokeWidth={2}
+      periodSec={20}
+      perspective="150em"
+      styles={[{ padding: '1em' }]}
+      isOrbiting
+    >
+      <HFlex wrap styles={[css.stretch]}>
+        {demos.map(({ name, showSource, component }, idx) => (
+          <ComponentSource
+            key={idx}
+            {...{ showSource, idx, name, component }}
+          />
+        ))}
+      </HFlex>
+    </Viewport>
+  </div>
 );

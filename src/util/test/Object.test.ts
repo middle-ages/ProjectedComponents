@@ -1,4 +1,5 @@
-import { mergeDefined, split } from 'src/util/Object';
+import { pipe } from 'fp-ts/lib/function';
+import { mergeDefined, mergeObjectsT, split, typedKeys } from 'src/util/Object';
 
 describe('Object util', () => {
   describe('split', () => {
@@ -14,8 +15,25 @@ describe('Object util', () => {
 
   describe('mergeDefined', () => {
     test('2nd undef undef', () =>
-      expect(mergeDefined({ a: 1 })({ a: undefined })).toEqual({ a: 1 }));
+      pipe(
+        { a: 1 },
+        mergeDefined({ a: undefined } as Partial<{ a: number }>),
+        expect,
+      ).toEqual({ a: 1 }));
     test('2nd defined', () =>
-      expect(mergeDefined({ a: 1 })({ a: 2 })).toEqual({ a: 2 }));
+      pipe({ a: 2 }, mergeDefined({ a: 1 }), expect).toEqual({ a: 2 }));
+  });
+
+  describe('typedKeys', () => {
+    const obj = { a: 'a' as string, b: 'b' as string, c: 1, d: true } as const;
+    test('2 entries of same type', () =>
+      pipe(obj, typedKeys, expect).toEqual(['a', 'b', 'c', 'd']));
+  });
+
+  describe('mergeObjectT', () => {
+    const o1 = { a: 1, b: 2 } as const,
+      o2 = { a: 3, c: 4 } as const;
+    test('some disjoint some override entries', () =>
+      pipe([o1, o2], mergeObjectsT, expect).toEqual({ a: 3, b: 2, c: 4 }));
   });
 });

@@ -1,21 +1,22 @@
-import { deg, px, repeatingLinearGradient } from 'csx';
+import { deg, repeatingLinearGradient } from 'csx';
 import { CsxColorStop } from 'csx/lib/types';
-import { pipe } from 'fp-ts/lib/function';
+import { bgColor as backgroundColor } from 'src/css/builders';
 import { Style } from 'src/css/types';
+import { px } from 'src/css/util';
 import { Color } from 'src/css/valueTypes';
-import { defined, mergeDefined, square } from 'src/util';
+import { mergeDefined, square } from 'src/util';
 
 export interface GridConfig {
   majorStep: number;
   color: Color;
-  backgroundColor: Color;
+  bgColor: Color;
   strokeWidth: number;
 }
 
 const defaultConfig: GridConfig = {
   majorStep: 24,
   color: '#ff000026',
-  backgroundColor: 'transparent',
+  bgColor: 'transparent',
   strokeWidth: 0,
 };
 
@@ -25,7 +26,7 @@ const colorStop = (color: Color, strokeWidth: number): CsxColorStop => [
   ],
   parallelLines = (majorStep: number, color: Color, strokeWidth: number) => (
     angle: number,
-    backgroundColor: Color,
+    bgColor: Color,
   ): string => {
     const halfStroke = strokeWidth / 2,
       bottom = majorStep - halfStroke;
@@ -34,8 +35,8 @@ const colorStop = (color: Color, strokeWidth: number): CsxColorStop => [
       deg(angle),
       colorStop(color, 0),
       colorStop(color, halfStroke),
-      colorStop(backgroundColor, halfStroke),
-      colorStop(backgroundColor, bottom),
+      colorStop(bgColor, halfStroke),
+      colorStop(bgColor, bottom),
       colorStop(color, bottom),
       colorStop(color, majorStep),
     );
@@ -44,59 +45,62 @@ const colorStop = (color: Color, strokeWidth: number): CsxColorStop => [
 /**
  * A background grid for debugging layout
  *
- * Return values depend on the structure of the given `GridConfig`:
+ * Given a partial `GridConfig`, returns the `background` CSS value required
+ * to render the grid as a component background. Grids shown at dev time help
+ * testing.
+ *
+ * `background` value returned depends on the given `GridConfig`:
  *
  * ```
- * ┌──────────────────┬───────────┬─────┬─────────────┬──────────┐
- * │     Outcome      │ majorStep │     │ strokeWidth │ bgColor  │
- * ├──────────────────┼───────────┼─────┼─────────────┼──────────┤
- * │Empty style       │       = 0 │ OR  │         = 0 │ !defined │
- * ├──────────────────┼───────────┼─────┼─────────────┼──────────┤
- * │Flat bg color     │       = 0 │ OR  │         = 0 │  defined │
- * ├──────────────────┼───────────┼─────┼─────────────┼──────────┤
- * │Grid pattern      │       ≠ 0 │ AND │         ≠ 0 │ !defined │
- * ├──────────────────┼───────────┼─────┼─────────────┼──────────┤
- * │Grid pattern + bg │       ≠ 0 │ AND │         ≠ 0 │  defined │
- * └──────────────────┴─────────────────┴─────────────┴──────────┘
+ * ┌──────────────────────────────┐┌───────────────────┐
+ * │             INPUT            ││      STYLE        │
+ * ├─────────┬───────────┬────────┤├───────────────────┤
+ * │majorStep│strokeWidth│bgColor ││                   │
+ * ├─────────┼───────────┼────────┤│                   │
+ * │    == 0 │       any │!defined││empty style        │
+ * ├─────────┼───────────┼────────┤├───────────────────┤
+ * │     any │      == 0 │ defined││flat bg color      │
+ * ├─────────┼───────────┼────────┤├───────────────────┤
+ * │    != 0 │      != 0 │!defined││grid pattern, no bg│
+ * ├─────────┼───────────┼────────┤├───────────────────┤
+ * │    != 0 │      != 0 │ defined││grid pattern + bg  │
+ * └─────────┴───────────┴────────┘└───────────────────┘
  * ```
  *
  * Undefined grid config values are replaced with defaults:
  * ```
  * {
- *   majorStep: 12,
- *   color: 'lightgray',
- *   bgColor: 'transparent',
- *   strokeWidth: 0,
+ *    majorStep: 24,
+ *    color: '#ff000026',
+ *    bgColor: 'transparent',
+ *    strokeWidth: 0,
  * }
  * ```
  * Examples:
- * ```
- * const noGridOrBg  = gridBackground({strokeWidth: 0});
- * const flatBg      = gridBackground({strokeWidth: 0, bgColor: 'red'});
- * const defaultGrid = gridBackground({});
- * const gridAndBg   = gridBackground({bgColor: 'red'});
- * ```
+ *
+ * 1. `gridBg()`, `gridBg({strokeWidth: 0, majorStep: 100})`,
+ * `gridBg({majorStep: 0, strokeWidth: 1})` - no grid nor background
+ * 1. `gridBg({bgColor: 'red'})`, `gridBg({strokeWidth: 0, bgColor: 'red'})` -
+ * flat red background
+ * 1. `gridBg({strokeWidth: 1})` - grid with no background, using default
+ * `majorStep`
+ * 1. `gridBg({strokeWidth: 2, majorStep: 5, bgColor: 'red', color: 'blue'})` -
+ * red background with blue colored 2px wide grid, gridlines every 5px
+ *
  **/
-export const gridBackground = (config: Partial<GridConfig>): Style => {
-  const { majorStep, color, backgroundColor, strokeWidth } = mergeDefined(
+export const gridBg = (config: Partial<GridConfig> = {}): Style => {
+  const { majorStep, color, bgColor, strokeWidth } = mergeDefined(
     defaultConfig,
   )(config);
 
   if (majorStep === 0 || strokeWidth === 0)
-    return defined(config.backgroundColor) ? { backgroundColor } : {};
+    return bgColor !== undefined ? backgroundColor(bgColor) : {};
 
-  const orthoLines = parallelLines(majorStep, color, strokeWidth),
-    background = [
-      orthoLines(0, 'transparent'),
-      orthoLines(90, backgroundColor),
-    ].join(','),
-    backgroundSize = pipe(pipe(majorStep, px, square).join(' '), square).join(
-      ',',
-    );
+  const lines = parallelLines(majorStep, color, strokeWidth),
+    background = [lines(0, 'transparent'), lines(90, bgColor)].join(',');
 
-  return {
-    background,
-    backgroundAttachment: 'local',
-    backgroundSize,
-  };
+  const halfSize = square(px(majorStep)).join(' '),
+    backgroundSize = square(halfSize).join(',');
+
+  return { background, backgroundSize, backgroundAttachment: 'local' };
 };

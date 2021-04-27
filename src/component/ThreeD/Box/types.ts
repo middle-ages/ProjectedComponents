@@ -1,6 +1,6 @@
-export type ThreeDFace = typeof ThreeDFaces[number];
+export type FaceKey3D = typeof FaceKeys3D[number];
 
-export type Face = 'front' | ThreeDFace;
+export type FaceKey = 'front' | FaceKey3D;
 
-export const ThreeDFaces = ['back', 'top', 'bottom', 'left', 'right'] as const,
-  Faces = ['front', ...ThreeDFaces] as Face[];
+export const FaceKeys3D = ['back', 'top', 'bottom', 'left', 'right'] as const,
+  FaceKeys = ['front', ...FaceKeys3D] as FaceKey[];
